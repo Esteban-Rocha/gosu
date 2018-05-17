@@ -72,19 +72,18 @@ bool Gosu::Texture::retro() const
     return retro_;
 }
 
-unique_ptr<Gosu::TexChunk> Gosu::Texture::try_alloc(shared_ptr<Texture> ptr, const Bitmap& bmp,
-                                                    unsigned padding)
+unique_ptr<Gosu::TexChunk> Gosu::Texture::try_alloc(const Bitmap& bmp, unsigned padding)
 {
     BlockAllocator::Block block;
     
     if (!allocator_.alloc(bmp.width(), bmp.height(), block)) return nullptr;
     
-    unique_ptr<Gosu::TexChunk> result(new TexChunk(ptr,
-                                                   block.left + padding,
-                                                   block.top + padding,
-                                                   block.width - 2 * padding,
-                                                   block.height - 2 * padding,
-                                                   padding));
+    unique_ptr<TexChunk> result(new TexChunk(shared_from_this(),
+                                             block.left   + padding,
+                                             block.top    + padding,
+                                             block.width  - 2 * padding,
+                                             block.height - 2 * padding,
+                                             padding));
     
     ensure_current_context();
     
@@ -112,10 +111,10 @@ Gosu::Bitmap Gosu::Texture::to_bitmap(unsigned x, unsigned y, unsigned width, un
 #else
     ensure_current_context();
     
-    Gosu::Bitmap full_texture(size(), size());
+    Bitmap full_texture(size(), size());
     glBindTexture(GL_TEXTURE_2D, tex_name());
     glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, full_texture.data());
-    Gosu::Bitmap bitmap(width, height);
+    Bitmap bitmap(width, height);
     bitmap.insert(full_texture, -int(x), -int(y));
     
     return bitmap;
